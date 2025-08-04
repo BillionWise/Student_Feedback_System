@@ -5,3 +5,13 @@ timestamp,name,course,feedback,source,sentiment,score
 2025-08-03 15:04:15,Adesina Lekan,Marketing Study,the course was hard,manual,negative,0.9996029734611511
 2025-08-03 15:45:19,jack paul,data analysis,The course isn't encouraging,manual,negative,0.9996730089187622
 2025-08-03 22:30:09,Jake Silver,Advance Development,A very educative course,manual,positive,0.9960197806358337
+2025-08-03 23:43:10,Jane Doe,Computer Science,The lectures are very engaging and clear.,manual,positive,0.9998601675033569
+2025-08-03 23:43:35,David Brown,Computer Science,I enjoyed the group project assignments.,manual,positive,0.9998512268066406
+2025-08-03 23:43:57,Sarah Williams,Computer Science,Sometimes the pace is too fast for me.,manual,negative,0.9989820122718811
+2025-08-03 23:44:13,Emma Garcia,Computer Science,The practical examples really help.,manual,positive,0.9992720484733582
+2025-08-03 23:44:34,Michael Miller,Computer Science,More coding exercises would be helpful.,manual,negative,0.9956417083740234
+2025-08-03 23:44:49,Alice Johnson,Computer Science,I like the interactive tutorials.,manual,positive,0.9994516968727112
+2025-08-03 23:45:07,John Smith,Computer Science,The course materials are well organized.,manual,positive,0.9998615980148315
+2025-08-03 23:45:26,James Wilson,Computer Science,I wish there were more Q&A sessions.,manual,negative,0.9985805749893188
+2025-08-03 23:45:39,Olivia Harris,Computer Science,The instructor explains concepts clearly.,manual,positive,0.9994962215423584
+2025-08-03 23:45:55,Lucas White,Computer Science,The assignments challenge my skills.,manual,negative,0.9568986296653748

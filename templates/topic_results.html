@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mt-4">
+    <h2>Thematic/Topic Analysis Results</h2>
+    {% if topic_results %}
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>Topic #</th>
+                    <th>Keywords</th>
+                    <th>Sample Feedback (examples)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for topic in topic_results %}
+                <tr>
+                    <td>{{ topic.topic_num }}</td>
+                    <td>{{ topic.keywords }}</td>
+                    <td>
+                        <ul>
+                        {% for sample in topic.sample_feedback %}
+                            <li>{{ sample }}</li>
+                        {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No topics found.</p>
+    {% endif %}
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary mt-3">Back to Dashboard</a>
+</div>
+{% endblock %}

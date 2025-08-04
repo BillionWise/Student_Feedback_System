@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mt-4">
+    <h2>Analyze Uploaded Dataset</h2>
+    <form method="post">
+        <label for="csv_file">Select CSV File:</label>
+        <select name="csv_file" class="form-select w-auto d-inline mx-2" required>
+            <option value="">-- Choose File --</option>
+            {% for file in upload_files %}
+            <option value="{{ file }}" {% if file == selected_file %}selected{% endif %}>{{ file }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-primary">Analyze</button>
+    </form>
+    
+
+    {% if results %}
+        <h4 class="mt-4">Results for {{ selected_file }}:</h4>
+        <a href="{{ url_for('download_uploaded_analysis', filename=selected_file) }}" class="btn btn-success mb-3">Download Analyzed CSV</a>
+
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Name</th>
+                    <th>Course</th>
+                    <th>Feedback</th>
+                    <th>Source</th>
+                    <th>Sentiment</th>
+                    <th>Score</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in results %}
+                <tr>
+                    <td>{{ entry.timestamp }}</td>
+                    <td>{{ entry.name }}</td>
+                    <td>{{ entry.course }}</td>
+                    <td>{{ entry.feedback }}</td>
+                    <td>{{ entry.source }}</td>
+                    <td>{{ entry.sentiment }}</td>
+                    <td>{{ '%.3f' % entry.score }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary mt-3">Back to Dashboard</a>
+</div>
+{% endblock %}

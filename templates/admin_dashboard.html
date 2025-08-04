@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mt-4">
+    <h2>Admin Dashboard</h2>
+    <ul>
+        <li><a href="{{ url_for('run_manual_analysis') }}">Analyze Manual Feedback Only</a></li>
+        <li><a href="{{ url_for('analyze_uploaded') }}">Analyze Uploaded Datasets</a></li>
+        <li><a href="{{ url_for('run_manual_topic_analysis') }}">Thematic Analysis (Manual Feedback)</a></li>
+        <li><a href="{{ url_for('run_uploaded_topic_analysis') }}">Thematic Analysis (Uploaded Dataset)</a></li>
+        <li><a href="{{ url_for('run_combined_analysis') }}">Analyze All Feedback Combined</a></li>
+        <li><a href="{{ url_for('upload') }}">Upload Feedback Dataset (CSV)</a></li>
+        <li><a href="{{ url_for('view_feedback') }}">View All Feedback Entries</a></li>
+        <li><a href="{{ url_for('logout') }}">Logout</a></li>
+    </ul>
+</div>
+{% endblock %}

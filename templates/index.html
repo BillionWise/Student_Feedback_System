@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Submit Student Feedback</h2>
+    <form method="post" action="/">
+        <div class="mb-3">
+            <label for="student_name" class="form-label">Your Name (optional):</label>
+            <input type="text" class="form-control" name="student_name" id="student_name">
+        </div>
+        <div class="mb-3">
+            <label for="course" class="form-label">Course:</label>
+            <input type="text" class="form-control" name="course" id="course" required>
+        </div>
+        <div class="mb-3">
+            <label for="feedback" class="form-label">Feedback:</label>
+            <textarea class="form-control" name="feedback" id="feedback" rows="5" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit Feedback</button>
+    </form>
+</div>
+{% endblock %}

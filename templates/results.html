@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mt-4">
+    <h2>Feedback Analysis Results</h2>
+    <a href="{{ url_for('download_analysis') }}" class="btn btn-success mb-3">Download Analysis as CSV</a>
+    {% if results %}
+    
+
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Name</th>
+                    <th>Course</th>
+                    <th>Feedback</th>
+                    <th>Source</th>
+                    <th>Sentiment</th>
+                    <th>Score</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in results %}
+                <tr>
+                    <td>{{ entry.timestamp }}</td>
+                    <td>{{ entry.name }}</td>
+                    <td>{{ entry.course }}</td>
+                    <td>{{ entry.feedback }}</td>
+                    <td>{{ entry.source }}</td>
+                    <td>{{ entry.sentiment }}</td>
+                    <td>{{ '%.3f' % entry.score }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No feedback entries to analyze.</p>
+    {% endif %}
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary mt-3">Back to Dashboard</a>
+</div>
+{% endblock %}

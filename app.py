@@ -15,6 +15,11 @@ UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'csv'}
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+
+
+
+
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -47,6 +52,17 @@ def admin_dashboard():
 
 
 
+
+
+
+
+#ADMIN UPLOAD ROUTE
+ALLOWED_EXTENSIONS = {'csv'}
+REQUIRED_COLUMNS = ['feedback', 'Name', 'Course']
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 @app.route('/admin/upload', methods=['GET', 'POST'])
 def upload():
     if not session.get('admin_logged_in'):
@@ -64,14 +80,35 @@ def upload():
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             save_path = os.path.join(UPLOAD_FOLDER, filename)
-            file.save(save_path)
-            flash('File uploaded successfully!', 'success')
-            # (Optional: Process/append to main data file here)
+            try:
+                file.save(save_path)
+                # --- Step 2: Check for required columns ---
+                import pandas as pd
+                df = pd.read_csv(save_path, encoding='utf-8')
+                missing_cols = [col for col in REQUIRED_COLUMNS if col not in df.columns]
+                if missing_cols:
+                    os.remove(save_path)
+                    flash(f"Upload failed: missing required column(s): {', '.join(missing_cols)}.", 'danger')
+                    return redirect(request.url)
+            except Exception as e:
+                if os.path.exists(save_path):
+                    os.remove(save_path)
+                flash(f"Failed to process file: {str(e)}", 'danger')
+                return redirect(request.url)
+            flash('File uploaded and validated successfully!', 'success')
             return redirect(url_for('admin_dashboard'))
         else:
             flash('Invalid file type. Only CSV allowed.', 'danger')
             return redirect(request.url)
     return render_template('upload.html')
+
+
+
+
+
+
+
+
 
 
 
@@ -464,11 +501,30 @@ def run_uploaded_topic_analysis():
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @app.route('/logout')
 def logout():
     session.pop('admin_logged_in', None)
     flash('Logged out.', 'info')
     return redirect(url_for('admin_login'))
+
+
 
 # (Keep your student feedback route at '/')
 @app.route('/', methods=['GET', 'POST'])
@@ -477,6 +533,18 @@ def index():
         student_name = request.form.get('student_name', '').strip()
         course = request.form.get('course', '').strip()
         feedback = request.form.get('feedback', '').strip()
+
+        # Error handling and validation
+        if not course or not feedback:
+            flash("Course and Feedback fields cannot be empty.", "danger")
+            return render_template('index.html')
+        if len(feedback) < 10:
+            flash("Feedback must be at least 10 characters.", "warning")
+            return render_template('index.html')
+        if len(feedback) > 1000:
+            flash("Feedback is too long (max 1000 characters).", "warning")
+            return render_template('index.html')
+
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         with open(DATA_FILE, 'a', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
@@ -484,6 +552,7 @@ def index():
         flash('Thank you for your feedback!', 'success')
         return redirect(url_for('index'))
     return render_template('index.html')
+
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -8,6 +8,7 @@ import pandas as pd
 from flask import send_file
 from flask import send_file
 from analysis.topic_modeling import run_topic_modeling
+from collections import Counter
 
 from analysis.sentiment import analyze_sentiment
 
@@ -30,10 +31,16 @@ ADMIN_PASSWORD = "admin123"   # You can change this to any secret password
 DATA_FILE = os.path.join('data', 'feedback_data.csv')
 os.makedirs('data', exist_ok=True)
 
+
+
+#Admin login route
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'POST':
         password = request.form.get('password', '')
+        if not password:
+            flash('Password field cannot be empty.', 'warning')
+            return render_template('admin_login.html')
         if password == ADMIN_PASSWORD:
             session['admin_logged_in'] = True
             flash('Welcome, Admin!', 'success')
@@ -42,6 +49,11 @@ def admin_login():
             flash('Incorrect password.', 'danger')
             return render_template('admin_login.html')
     return render_template('admin_login.html')
+
+
+
+
+
 
 @app.route('/admin/dashboard')
 def admin_dashboard():
@@ -177,39 +189,78 @@ def download_analysis():
 
 
 
+
+
+
 #Analyze Manual Feedback Only
+from collections import Counter
 @app.route('/admin/analysis/manual')
 def run_manual_analysis():
     if not session.get('admin_logged_in'):
         flash('Please log in as admin.', 'warning')
         return redirect(url_for('admin_login'))
+
     feedback_entries = []
-    if os.path.exists(DATA_FILE):
+    if not os.path.exists(DATA_FILE):
+        flash("No manual feedback data found. Please collect some feedback first.", "warning")
+        return redirect(url_for('admin_dashboard'))
+    
+    try:
         with open(DATA_FILE, newline='', encoding='utf-8') as f:
             reader = csv.reader(f)
             for row in reader:
                 feedback_entries.append(row)
+    except Exception as e:
+        flash(f"Failed to read manual feedback file: {str(e)}", "danger")
+        return redirect(url_for('admin_dashboard'))
+
+    if not feedback_entries:
+        flash("No manual feedback data to analyze.", "warning")
+        return redirect(url_for('admin_dashboard'))
+
     results = []
-    for row in feedback_entries:
-        feedback_text = str(row[3])
-        sentiment_label, sentiment_score = analyze_sentiment(feedback_text)
-        results.append({
-            "timestamp": row[0],
-            "name": row[1],
-            "course": row[2],
-            "feedback": feedback_text,
-            "source": "manual",
-            "sentiment": sentiment_label,
-            "score": sentiment_score
-        })
-    # Save analyzed manual feedback
-    pd.DataFrame(results).to_csv(os.path.join('data', 'manual_feedback_with_sentiment.csv'), index=False, encoding='utf-8')
-    flash("Manual feedback analysis complete.", "success")
-    return render_template('results.html', results=results)
+    try:
+        for row in feedback_entries:
+            # Defensive: ensure the row has enough columns
+            if len(row) < 4 or not row[3].strip():
+                continue
+            feedback_text = str(row[3])
+            sentiment_label, sentiment_score = analyze_sentiment(feedback_text)
+            results.append({
+                "timestamp": row[0],
+                "name": row[1],
+                "course": row[2],
+                "feedback": feedback_text,
+                "source": "manual",
+                "sentiment": sentiment_label,
+                "score": sentiment_score
+            })
+        if not results:
+            flash("No valid feedback entries to analyze.", "warning")
+            return redirect(url_for('admin_dashboard'))
+
+        # 🟢 Count sentiment labels for the chart
+        sentiment_counts = Counter([entry['sentiment'] for entry in results])
+        # Save analyzed manual feedback
+        pd.DataFrame(results).to_csv(os.path.join('data', 'manual_feedback_with_sentiment.csv'), index=False, encoding='utf-8')
+        flash("Manual feedback analysis complete.", "success")
+        # Pass sentiment_counts to the template
+        return render_template('results.html', results=results, sentiment_counts=sentiment_counts)
+    except Exception as e:
+        flash(f"Failed during analysis: {str(e)}", "danger")
+        return redirect(url_for('admin_dashboard'))
+
+
+
+
+
+
 
 
 
 # Analyze Uploaded Datasets (Select a File)
+
+
 @app.route('/admin/analysis/uploaded', methods=['GET', 'POST'])
 def analyze_uploaded():
     if not session.get('admin_logged_in'):
@@ -220,27 +271,41 @@ def analyze_uploaded():
     upload_files = [os.path.basename(f) for f in glob.glob(os.path.join('uploads', '*.csv'))]
     results = []
     selected_file = None
+    sentiment_counts = {}
 
     if request.method == 'POST':
         selected_file = request.form.get('csv_file')
         selected_path = os.path.join('uploads', selected_file)
-        if selected_file and os.path.exists(selected_path):
+        if not selected_file or not os.path.exists(selected_path):
+            flash("No file selected or file does not exist.", "danger")
+            return redirect(request.url)
+        try:
             import pandas as pd
             df = pd.read_csv(selected_path, encoding='utf-8')
-            # For your dataset, these are the right columns:
-            # 'feedback', 'Name', 'Course', 'Year'
-            if 'feedback' in df.columns:
-                feedback_col = 'feedback'
-            elif 'comment' in df.columns:
-                feedback_col = 'comment'
-            else:
-                flash("No feedback/comment column found.", "danger")
-                return redirect(request.url)
+        except Exception as e:
+            flash(f"Could not read CSV file: {str(e)}", "danger")
+            return redirect(request.url)
+
+        # Check for required columns
+        if 'feedback' in df.columns:
+            feedback_col = 'feedback'
+        elif 'comment' in df.columns:
+            feedback_col = 'comment'
+        else:
+            flash("No feedback/comment column found.", "danger")
+            return redirect(request.url)
+        if 'Name' not in df.columns or 'Course' not in df.columns:
+            flash("Missing required columns: Name and/or Course.", "danger")
+            return redirect(request.url)
+
+        try:
             for idx, row in df.iterrows():
                 feedback_text = str(row[feedback_col])
                 name = row.get('Name', '')
                 course = row.get('Course', '')
-                timestamp = row.get('Year', 'N/A')  # Or use another column if you prefer
+                timestamp = row.get('Year', 'N/A')
+                if not feedback_text or not course:
+                    continue  # skip empty feedbacks or missing course
                 sentiment_label, sentiment_score = analyze_sentiment(feedback_text)
                 results.append({
                     "timestamp": timestamp,
@@ -251,15 +316,22 @@ def analyze_uploaded():
                     "sentiment": sentiment_label,
                     "score": sentiment_score
                 })
+            if not results:
+                flash("No valid feedback entries found in the selected file.", "warning")
+                return render_template('analyze_uploaded.html', upload_files=upload_files, results=results, sentiment_counts=sentiment_counts, selected_file=selected_file)
             # Save the analyzed results as a unique file
-            if selected_file and results:
-                analyzed_filename = f'analyzed_{selected_file}'
-                analyzed_filepath = os.path.join('data', analyzed_filename)
-                pd.DataFrame(results).to_csv(analyzed_filepath, index=False, encoding='utf-8')
+            analyzed_filename = f'analyzed_{selected_file}'
+            analyzed_filepath = os.path.join('data', analyzed_filename)
+            pd.DataFrame(results).to_csv(analyzed_filepath, index=False, encoding='utf-8')
             flash(f"Analysis of {selected_file} complete.", "success")
-            print("CSV columns:", df.columns.tolist())
+            # 🟢 Count sentiments for the chart
+            sentiment_counts = Counter([entry['sentiment'] for entry in results])
+        except Exception as e:
+            flash(f"Failed during analysis: {str(e)}", "danger")
+            return redirect(request.url)
+        print("CSV columns:", df.columns.tolist())
 
-    return render_template('analyze_uploaded.html', upload_files=upload_files, results=results, selected_file=selected_file)
+    return render_template('analyze_uploaded.html', upload_files=upload_files, results=results, sentiment_counts=sentiment_counts, selected_file=selected_file)
 
 
 
@@ -277,14 +349,19 @@ def run_combined_analysis():
         return redirect(url_for('admin_login'))
 
     feedback_entries = []
-    # 1. Manual feedback
-    if os.path.exists(DATA_FILE):
-        with open(DATA_FILE, newline='', encoding='utf-8') as f:
-            reader = csv.reader(f)
-            for row in reader:
-                feedback_entries.append(row)
 
-    # 2. All uploads
+    # 1. Manual feedback (same as before)
+    if os.path.exists(DATA_FILE):
+        try:
+            with open(DATA_FILE, newline='', encoding='utf-8') as f:
+                reader = csv.reader(f)
+                for row in reader:
+                    feedback_entries.append(row)
+        except Exception as e:
+            flash(f"Error reading manual feedback file: {str(e)}", "danger")
+            return redirect(url_for('admin_dashboard'))
+
+    # 2. All uploads (improved: handle Name and Course correctly!)
     upload_files = glob.glob(os.path.join('uploads', '*.csv'))
     for file_path in upload_files:
         try:
@@ -294,35 +371,61 @@ def run_combined_analysis():
             elif 'comment' in df.columns:
                 feedback_col = 'comment'
             else:
+                flash(f"No feedback/comment column found in {os.path.basename(file_path)}.", "danger")
                 continue
             for idx, row in df.iterrows():
+                feedback_text = str(row[feedback_col]).strip()
+                if not feedback_text:
+                    continue
+                # Fixed: use correct columns for name/course in uploaded files!
+                name = row.get('Name', '')
+                course = row.get('Course', '')
+                timestamp = row.get('Year', 'N/A')
                 feedback_entries.append([
-                    row.get('timestamp', 'N/A'),
-                    row.get('student_name', ''),
-                    row.get('course', ''),
-                    row[feedback_col],
+                    timestamp,
+                    name,
+                    course,
+                    feedback_text,
                     os.path.basename(file_path)
                 ])
         except Exception as e:
-            print(f"Error reading {file_path}: {e}")
+            flash(f"Error reading {os.path.basename(file_path)}: {str(e)}", "danger")
             continue
 
+    if not feedback_entries:
+        flash("No feedback data found (manual or uploaded) to analyze.", "warning")
+        return redirect(url_for('admin_dashboard'))
+
     results = []
-    for row in feedback_entries:
-        feedback_text = str(row[3])
-        sentiment_label, sentiment_score = analyze_sentiment(feedback_text)
-        results.append({
-            "timestamp": row[0],
-            "name": row[1],
-            "course": row[2],
-            "feedback": feedback_text,
-            "source": row[4],
-            "sentiment": sentiment_label,
-            "score": sentiment_score
-        })
-    pd.DataFrame(results).to_csv(os.path.join('data', 'all_feedback_with_sentiment.csv'), index=False, encoding='utf-8')
-    flash("Combined analysis complete.", "success")
-    return render_template('results.html', results=results)
+    try:
+        for row in feedback_entries:
+            if len(row) < 4 or not str(row[3]).strip():
+                continue
+            feedback_text = str(row[3])
+            sentiment_label, sentiment_score = analyze_sentiment(feedback_text)
+            results.append({
+                "timestamp": row[0],
+                "name": row[1],
+                "course": row[2],
+                "feedback": feedback_text,
+                "source": row[4],
+                "sentiment": sentiment_label,
+                "score": sentiment_score
+            })
+        if not results:
+            flash("No valid feedback entries to analyze.", "warning")
+            return redirect(url_for('admin_dashboard'))
+
+        pd.DataFrame(results).to_csv(os.path.join('data', 'all_feedback_with_sentiment.csv'), index=False, encoding='utf-8')
+        flash("Combined analysis complete.", "success")
+        return render_template('results.html', results=results)
+    except Exception as e:
+        flash(f"Failed during combined analysis: {str(e)}", "danger")
+        return redirect(url_for('admin_dashboard'))
+
+
+
+
 
 
 

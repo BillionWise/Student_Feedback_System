@@ -1,40 +1,98 @@
 {% extends "base.html" %}
+{% block title %}Analysis Results · Feedback Analytics{% endblock %}
 {% block content %}
-<div class="mt-4">
-    <h2>Feedback Analysis Results</h2>
-    <a href="{{ url_for('download_analysis') }}" class="btn btn-success mb-3">Download Analysis as CSV</a>
-    {% if results %}
-    
 
-        <table class="table table-bordered table-striped">
-            <thead>
-                <tr>
-                    <th>Timestamp</th>
-                    <th>Name</th>
-                    <th>Course</th>
-                    <th>Feedback</th>
-                    <th>Source</th>
-                    <th>Sentiment</th>
-                    <th>Score</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for entry in results %}
-                <tr>
-                    <td>{{ entry.timestamp }}</td>
-                    <td>{{ entry.name }}</td>
-                    <td>{{ entry.course }}</td>
-                    <td>{{ entry.feedback }}</td>
-                    <td>{{ entry.source }}</td>
-                    <td>{{ entry.sentiment }}</td>
-                    <td>{{ '%.3f' % entry.score }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>No feedback entries to analyze.</p>
+<div class="card shadow-sm mt-3">
+  <div class="card-body">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+      <h2 class="card-title m-0">
+        <i class="bi bi-bar-chart-fill me-2 text-primary"></i>Feedback Analysis Results
+      </h2>
+      <a href="{{ url_for('download_analysis') }}" class="btn btn-success">
+        <i class="bi bi-download me-1"></i> Download Analysis as CSV
+      </a>
+    </div>
+
+    {% if sentiment_counts %}
+      <div class="d-flex flex-column align-items-center">
+        <h4 class="mt-4 mb-3">Sentiment Distribution</h4>
+        <div id="sentiment-chart" class="mb-4"></div>
+      </div>
+
+      <!-- Plotly -->
+      <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+      <!-- Keep JSON separate so VS Code linter stays happy -->
+      <script id="sentiment-data" type="application/json">
+        {{ [sentiment_counts.get('positive', 0), sentiment_counts.get('neutral', 0), sentiment_counts.get('negative', 0)] | tojson }}
+      </script>
+      <script>
+        const sentimentData = JSON.parse(document.getElementById('sentiment-data').textContent);
+        const data = [{
+          values: sentimentData,
+          labels: ['Positive', 'Neutral', 'Negative'],
+          type: 'pie'
+        }];
+        const layout = {
+          height: 400,
+          width: 520,
+          legend: { font: { size: 16 } },
+          font: { size: 14 },
+          margin: { t: 0 }
+        };
+        Plotly.newPlot('sentiment-chart', data, layout, {displayModeBar:false});
+      </script>
     {% endif %}
-    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary mt-3">Back to Dashboard</a>
+
+    {% if results %}
+      <div class="table-responsive">
+        <table class="table table-bordered table-striped align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Timestamp</th>
+              <th>Name</th>
+              <th>Course</th>
+              <th style="min-width: 320px;">Feedback</th>
+              <th>Source</th>
+              <th>Sentiment</th>
+              <th>Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for entry in results %}
+              <tr>
+                <td>{{ entry.timestamp }}</td>
+                <td>{{ entry.name }}</td>
+                <td>{{ entry.course }}</td>
+                <td>{{ entry.feedback }}</td>
+                <td>{{ entry.source }}</td>
+                <td>
+                  {% if entry.sentiment|lower == 'positive' %}
+                    <span class="badge bg-success">Positive</span>
+                  {% elif entry.sentiment|lower == 'neutral' %}
+                    <span class="badge bg-secondary">Neutral</span>
+                  {% elif entry.sentiment|lower == 'negative' %}
+                    <span class="badge bg-danger">Negative</span>
+                  {% else %}
+                    <span class="badge bg-dark">{{ entry.sentiment }}</span>
+                  {% endif %}
+                </td>
+                <td>{{ '%.3f' % entry.score }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="text-muted mt-3 mb-0">No feedback entries to analyze.</p>
+    {% endif %}
+  </div>
 </div>
+
+<div class="d-flex">
+  <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary mt-3 ms-auto">
+    <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+  </a>
+</div>
+
 {% endblock %}

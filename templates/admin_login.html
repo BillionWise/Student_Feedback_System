@@ -1,15 +1,27 @@
 {% extends "base.html" %}
+{% block title %}Admin Login · Feedback Analytics{% endblock %}
 {% block content %}
-<div class="row justify-content-center mt-5">
-    <div class="col-md-4">
-        <h3>Admin Login</h3>
-        <form method="post" action="{{ url_for('admin_login') }}">
-            <div class="mb-3">
-                <label for="password" class="form-label">Password:</label>
-                <input type="password" class="form-control" id="password" name="password" required>
-            </div>
-            <button type="submit" class="btn btn-dark">Login</button>
-        </form>
+
+<div class="d-flex justify-content-center align-items-center mt-5">
+  <div class="card shadow-sm p-4" style="max-width: 420px; width:100%;">
+    <div class="card-body">
+      <h3 class="card-title text-center mb-4 text-primary">
+        <i class="bi bi-shield-lock-fill me-2"></i>Admin Login
+      </h3>
+
+      <form method="post" action="{{ url_for('admin_login') }}">
+        <div class="mb-3">
+          <label for="password" class="form-label">Password</label>
+          <input type="password" class="form-control" id="password" name="password" placeholder="Enter admin password" required>
+        </div>
+        <div class="d-grid">
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-box-arrow-in-right me-1"></i> Login
+          </button>
+        </div>
+      </form>
     </div>
+  </div>
 </div>
+
 {% endblock %}

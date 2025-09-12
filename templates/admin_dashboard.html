@@ -1,20 +1,141 @@
 {% extends "base.html" %}
+{% block title %}Admin Dashboard · Feedback Analytics{% endblock %}
 {% block content %}
-<div class="mt-4">
-    <h2>Admin Dashboard</h2>
-    <ul>
-        <li><a href="{{ url_for('run_manual_analysis') }}">Analyze Manual Feedback Only</a></li>
-        <li><a href="{{ url_for('analyze_uploaded') }}">Analyze Uploaded Datasets</a></li>
-        <li><a href="{{ url_for('run_manual_topic_analysis') }}">Thematic Analysis (Manual Feedback)</a></li>
-        <li><a href="{{ url_for('run_uploaded_topic_analysis') }}">Thematic Analysis (Uploaded Dataset)</a></li>
-       
 
-        <li><a href="{{ url_for('run_combined_analysis') }}">Analyze All Feedback Combined</a></li>
-        
-
-        <li><a href="{{ url_for('upload') }}">Upload Feedback Dataset (CSV)</a></li>
-        <li><a href="{{ url_for('view_feedback') }}">View All Feedback Entries</a></li>
-        <li><a href="{{ url_for('logout') }}">Logout</a></li>
-    </ul>
+<div class="d-flex align-items-center justify-content-between mt-2 mb-3">
+  <h2 class="m-0">Admin Dashboard</h2>
 </div>
+
+<div class="row g-3">
+
+  <!-- Analyze Manual Feedback Only -->
+  <div class="col-12 col-sm-6 col-lg-4">
+    <a href="{{ url_for('run_manual_analysis') }}" class="text-decoration-none">
+      <div class="card card-hover h-100 shadow-sm">
+        <div class="card-body d-flex gap-3 align-items-start">
+          <div class="display-6 text-primary"><i class="bi bi-graph-up"></i></div>
+          <div>
+            <h5 class="card-title mb-1">Analyze Manual Feedback</h5>
+            <p class="text-muted mb-0 small">Run sentiment analysis on feedback submitted manually.</p>
+          </div>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <!-- Analyze Uploaded Datasets -->
+  <div class="col-12 col-sm-6 col-lg-4">
+    <a href="{{ url_for('analyze_uploaded') }}" class="text-decoration-none">
+      <div class="card card-hover h-100 shadow-sm">
+        <div class="card-body d-flex gap-3 align-items-start">
+          <div class="display-6 text-primary"><i class="bi bi-file-earmark-bar-graph"></i></div>
+          <div>
+            <h5 class="card-title mb-1">Analyze Uploaded Datasets</h5>
+            <p class="text-muted mb-0 small">Select a CSV and run sentiment analysis.</p>
+          </div>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <!-- Thematic Analysis (Manual) -->
+  <div class="col-12 col-sm-6 col-lg-4">
+    <a href="{{ url_for('run_manual_topic_analysis') }}"
+       class="text-decoration-none js-show-loader-link"
+       data-loader-title="Discovering topics…"
+       data-loader-note="We’re grouping similar feedback into themes."
+       data-loader-src="https://assets10.lottiefiles.com/packages/lf20_t0mvxlzu.json">
+      <div class="card card-hover h-100 shadow-sm">
+        <div class="card-body d-flex gap-3 align-items-start">
+          <div class="display-6 text-primary"><i class="bi bi-ui-checks-grid"></i></div>
+          <div>
+            <h5 class="card-title mb-1">Thematic Analysis (Manual)</h5>
+            <p class="text-muted mb-0 small">Discover topics from manually submitted feedback.</p>
+          </div>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <!-- Thematic Analysis (Uploaded) -->
+  <div class="col-12 col-sm-6 col-lg-4">
+    <a href="{{ url_for('run_uploaded_topic_analysis') }}"
+       class="text-decoration-none js-show-loader-link"
+       data-loader-title="Discovering topics…"
+       data-loader-note="We’re grouping similar feedback into themes."
+       data-loader-src="https://assets10.lottiefiles.com/packages/lf20_t0mvxlzu.json">
+      <div class="card card-hover h-100 shadow-sm">
+        <div class="card-body d-flex gap-3 align-items-start">
+          <div class="display-6 text-primary"><i class="bi bi-diagram-3"></i></div>
+          <div>
+            <h5 class="card-title mb-1">Thematic Analysis (Uploaded)</h5>
+            <p class="text-muted mb-0 small">Discover topics from uploaded CSV datasets.</p>
+          </div>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <!-- Analyze All Feedback Combined -->
+  <div class="col-12 col-sm-6 col-lg-4">
+    <a href="{{ url_for('run_combined_analysis') }}" class="text-decoration-none">
+      <div class="card card-hover h-100 shadow-sm">
+        <div class="card-body d-flex gap-3 align-items-start">
+          <div class="display-6 text-primary"><i class="bi bi-collection"></i></div>
+          <div>
+            <h5 class="card-title mb-1">Analyze All Feedback Combined</h5>
+            <p class="text-muted mb-0 small">Sentiment across manual + all uploaded files.</p>
+          </div>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <!-- Upload Feedback Dataset -->
+  <div class="col-12 col-sm-6 col-lg-4">
+    <a href="{{ url_for('upload') }}" class="text-decoration-none">
+      <div class="card card-hover h-100 shadow-sm">
+        <div class="card-body d-flex gap-3 align-items-start">
+          <div class="display-6 text-primary"><i class="bi bi-upload"></i></div>
+          <div>
+            <h5 class="card-title mb-1">Upload Feedback Dataset (CSV)</h5>
+            <p class="text-muted mb-0 small">Validate and store CSVs for analysis.</p>
+          </div>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <!-- View All Feedback Entries -->
+  <div class="col-12 col-sm-6 col-lg-4">
+    <a href="{{ url_for('view_feedback') }}" class="text-decoration-none">
+      <div class="card card-hover h-100 shadow-sm">
+        <div class="card-body d-flex gap-3 align-items-start">
+          <div class="display-6 text-primary"><i class="bi bi-list-ul"></i></div>
+          <div>
+            <h5 class="card-title mb-1">View All Feedback Entries</h5>
+            <p class="text-muted mb-0 small">Browse submissions collected so far.</p>
+          </div>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <!-- Logout -->
+  <div class="col-12 col-sm-6 col-lg-4">
+    <a href="{{ url_for('logout') }}" class="text-decoration-none">
+      <div class="card card-hover h-100 shadow-sm">
+        <div class="card-body d-flex gap-3 align-items-start">
+          <div class="display-6 text-danger"><i class="bi bi-box-arrow-right"></i></div>
+          <div>
+            <h5 class="card-title mb-1 text-danger">Logout</h5>
+            <p class="text-muted mb-0 small">Sign out of the admin session.</p>
+          </div>
+        </div>
+      </div>
+    </a>
+  </div>
+
+</div>
+
 {% endblock %}

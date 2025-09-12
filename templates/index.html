@@ -1,21 +1,39 @@
 {% extends "base.html" %}
+{% block title %}Submit Feedback · Feedback Analytics{% endblock %}
 {% block content %}
-<div class="container mt-4">
-    <h2>Submit Student Feedback</h2>
-    <form method="post" action="/">
+
+<div class="d-flex justify-content-center mt-4">
+  <div class="card shadow-sm form-wide w-100">
+    <div class="card-body">
+      <h2 class="card-title mb-3 text-primary">
+        <i class="bi bi-pencil-square me-2"></i>Submit Student Feedback
+      </h2>
+      <p class="text-muted small mb-4">
+        Your input helps us analyze courses and improve the learning experience.
+      </p>
+
+      <form method="post" action="/">
         <div class="mb-3">
-            <label for="student_name" class="form-label">Your Name (optional):</label>
-            <input type="text" class="form-control" name="student_name" id="student_name">
+          <label for="student_name" class="form-label">Your Name <span class="text-muted">(optional)</span></label>
+          <input type="text" class="form-control" name="student_name" id="student_name" placeholder="Enter your name">
         </div>
+
         <div class="mb-3">
-            <label for="course" class="form-label">Course:</label>
-            <input type="text" class="form-control" name="course" id="course" required>
+          <label for="course" class="form-label">Course <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" name="course" id="course" placeholder="e.g. Software Engineering" required>
         </div>
+
         <div class="mb-3">
-            <label for="feedback" class="form-label">Feedback:</label>
-            <textarea class="form-control" name="feedback" id="feedback" rows="5" required></textarea>
+          <label for="feedback" class="form-label">Feedback <span class="text-danger">*</span></label>
+          <textarea class="form-control" name="feedback" id="feedback" rows="5" placeholder="Write your feedback here..." required></textarea>
         </div>
-        <button type="submit" class="btn btn-primary">Submit Feedback</button>
-    </form>
+
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-send-fill me-1"></i> Submit Feedback
+        </button>
+      </form>
+    </div>
+  </div>
 </div>
+
 {% endblock %}

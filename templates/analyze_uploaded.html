@@ -1,50 +1,112 @@
 {% extends "base.html" %}
+{% block title %}Analyze Uploaded Dataset · Feedback Analytics{% endblock %}
 {% block content %}
-<div class="mt-4">
-    <h2>Analyze Uploaded Dataset</h2>
-    <form method="post">
-        <label for="csv_file">Select CSV File:</label>
-        <select name="csv_file" class="form-select w-auto d-inline mx-2" required>
+
+<div class="card shadow-sm mt-3">
+  <div class="card-body">
+
+    <!-- Header + Download (when available) -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+      <h2 class="card-title m-0">
+        <i class="bi bi-file-earmark-bar-graph me-2 text-primary"></i>Analyze Uploaded Dataset
+      </h2>
+      {% if selected_file %}
+        <a href="{{ url_for('download_uploaded_analysis', filename=selected_file) }}" class="btn btn-success">
+          <i class="bi bi-download me-1"></i> Download Analyzed CSV
+        </a>
+      {% endif %}
+    </div>
+
+    <!-- Select file form -->
+    <form method="post" class="mt-3">
+      <div class="row gy-2 align-items-end">
+        <div class="col-12 col-md-6 col-lg-4">
+          <label for="csv_file" class="form-label">Select CSV File</label>
+          <select name="csv_file" id="csv_file" class="form-select" required>
             <option value="">-- Choose File --</option>
             {% for file in upload_files %}
-            <option value="{{ file }}" {% if file == selected_file %}selected{% endif %}>{{ file }}</option>
+              <option value="{{ file }}" {% if file == selected_file %}selected{% endif %}>{{ file }}</option>
             {% endfor %}
-        </select>
-        <button type="submit" class="btn btn-primary">Analyze</button>
+          </select>
+        </div>
+        <div class="col-12 col-md-auto">
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-play-fill me-1"></i> Analyze
+          </button>
+        </div>
+      </div>
     </form>
-    
 
-    {% if results %}
-        <h4 class="mt-4">Results for {{ selected_file }}:</h4>
-        <a href="{{ url_for('download_uploaded_analysis', filename=selected_file) }}" class="btn btn-success mb-3">Download Analyzed CSV</a>
+    <!-- Sentiment chart -->
+    {% if sentiment_counts %}
+      <div class="d-flex flex-column align-items-center">
+        <h4 class="mt-4 mb-3">Sentiment Distribution</h4>
+        <div id="sentiment-chart" class="mb-3"></div>
+      </div>
 
-        <table class="table table-bordered table-striped">
-            <thead>
-                <tr>
-                    <th>Timestamp</th>
-                    <th>Name</th>
-                    <th>Course</th>
-                    <th>Feedback</th>
-                    <th>Source</th>
-                    <th>Sentiment</th>
-                    <th>Score</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for entry in results %}
-                <tr>
-                    <td>{{ entry.timestamp }}</td>
-                    <td>{{ entry.name }}</td>
-                    <td>{{ entry.course }}</td>
-                    <td>{{ entry.feedback }}</td>
-                    <td>{{ entry.source }}</td>
-                    <td>{{ entry.sentiment }}</td>
-                    <td>{{ '%.3f' % entry.score }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+      <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+      <!-- Keep JSON separate so editors don't show JS errors -->
+      <script id="sentiment-data" type="application/json">
+        {{ [sentiment_counts.get('positive', 0), sentiment_counts.get('neutral', 0), sentiment_counts.get('negative', 0)] | tojson }}
+      </script>
+      <script>
+        const sentimentData = JSON.parse(document.getElementById('sentiment-data').textContent);
+        const data = [{ values: sentimentData, labels: ['Positive','Neutral','Negative'], type: 'pie' }];
+        const layout = { height: 400, width: 520, legend: { font: { size: 16 } }, font: { size: 14 }, margin: { t: 0 } };
+        Plotly.newPlot('sentiment-chart', data, layout, {displayModeBar:false});
+      </script>
     {% endif %}
-    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary mt-3">Back to Dashboard</a>
+
+    <!-- Results table -->
+    {% if results %}
+      <h4 class="mt-4">Results for <span class="text-primary">{{ selected_file }}</span></h4>
+      <div class="table-responsive mt-2">
+        <table class="table table-bordered table-striped align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Timestamp</th>
+              <th>Name</th>
+              <th>Course</th>
+              <th style="min-width:320px;">Feedback</th>
+              <th>Source</th>
+              <th>Sentiment</th>
+              <th>Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for entry in results %}
+              <tr>
+                <td>{{ entry.timestamp }}</td>
+                <td>{{ entry.name }}</td>
+                <td>{{ entry.course }}</td>
+                <td>{{ entry.feedback }}</td>
+                <td>{{ entry.source }}</td>
+                <td>
+                  {% if entry.sentiment|lower == 'positive' %}
+                    <span class="badge bg-success">Positive</span>
+                  {% elif entry.sentiment|lower == 'neutral' %}
+                    <span class="badge bg-secondary">Neutral</span>
+                  {% elif entry.sentiment|lower == 'negative' %}
+                    <span class="badge bg-danger">Negative</span>
+                  {% else %}
+                    <span class="badge bg-dark">{{ entry.sentiment }}</span>
+                  {% endif %}
+                </td>
+                <td>{{ '%.3f' % entry.score }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+
+  </div>
 </div>
+
+<div class="d-flex">
+  <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary mt-3 ms-auto">
+    <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+  </a>
+</div>
+
 {% endblock %}

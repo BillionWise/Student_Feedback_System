@@ -1,35 +1,57 @@
 {% extends "base.html" %}
+{% block title %}Thematic Analysis · Feedback Analytics{% endblock %}
 {% block content %}
-<div class="mt-4">
-    <h2>Thematic/Topic Analysis Results</h2>
-    {% if topic_results %}
-        <table class="table table-bordered table-striped">
-            <thead>
-                <tr>
-                    <th>Topic #</th>
-                    <th>Keywords</th>
-                    <th>Sample Feedback (examples)</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for topic in topic_results %}
-                <tr>
-                    <td>{{ topic.topic_num }}</td>
-                    <td>{{ topic.keywords }}</td>
-                    <td>
-                        <ul>
-                        {% for sample in topic.sample_feedback %}
-                            <li>{{ sample }}</li>
-                        {% endfor %}
-                        </ul>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>No topics found.</p>
+
+<div class="card shadow-sm mt-3">
+  <div class="card-body">
+    <h2 class="card-title mb-3 text-primary">
+      <i class="bi bi-diagram-3 me-2"></i>Thematic / Topic Analysis Results
+    </h2>
+
+    {% if wc_url %}
+      <div class="d-flex flex-column align-items-center mb-4">
+        <h5 class="mb-2">Overall Word Cloud</h5>
+        <img src="{{ wc_url }}" alt="Word Cloud" class="img-fluid shadow-sm rounded" style="max-width:900px;">
+      </div>
     {% endif %}
-    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary mt-3">Back to Dashboard</a>
+
+    {% if topic_results %}
+      <div class="table-responsive">
+        <table class="table table-bordered table-striped align-middle">
+          <thead class="table-light">
+            <tr>
+              <th class="text-nowrap">Topic #</th>
+              <th>Keywords</th>
+              <th style="min-width: 400px;">Sample Feedback (examples)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for topic in topic_results %}
+              <tr>
+                <td><span class="badge bg-primary">{{ topic.topic_num }}</span></td>
+                <td><code>{{ topic.keywords }}</code></td>
+                <td>
+                  <ul class="mb-0 ps-3">
+                    {% for sample in topic.sample_feedback %}
+                      <li>{{ sample }}</li>
+                    {% endfor %}
+                  </ul>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="text-muted mt-3 mb-0">No topics found.</p>
+    {% endif %}
+  </div>
 </div>
+
+<div class="d-flex">
+  <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary mt-3 ms-auto">
+    <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+  </a>
+</div>
+
 {% endblock %}
